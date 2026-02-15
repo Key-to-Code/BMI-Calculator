@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'health_advice_screen.dart';
 
 class BMIResultScreen extends StatefulWidget {
   final double bmiValue;
   final String userName;
+  final int age;
+  final String goal;
+  final String gender;
 
   const BMIResultScreen({
     super.key,
     required this.bmiValue,
     required this.userName,
+    required this.age,
+    required this.goal,
+    required this.gender,
   });
 
   @override
@@ -20,9 +27,25 @@ class _BMIResultScreenState extends State<BMIResultScreen> {
   int _currentNavIndex = 0;
 
   void _onNavItemTapped(int index) {
-    setState(() {
-      _currentNavIndex = index;
-    });
+    if (index == 1) {
+      // Navigate to Health Advice screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HealthAdviceScreen(
+            bmiValue: widget.bmiValue,
+            userName: widget.userName,
+            age: widget.age,
+            goal: widget.goal,
+            gender: widget.gender,
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        _currentNavIndex = index;
+      });
+    }
   }
 
   String _getBMIMessage(double bmi) {
@@ -179,13 +202,13 @@ class _BMIResultScreenState extends State<BMIResultScreen> {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                Color(0xFFF3A00C), // Orange
-                Color(0xFFD2C11D), // Yellow
-                Color(0xFFBDD527), // Yellow-green
-                Color(0xFF92C384), // Light green
-                Color(0xFF62A6F6), // Blue
+                Color(0xFF62A6F6), // Blue (0%)
+                Color(0xFF92C384), // Light green (22.12%)
+                Color(0xFFBDD527), // Yellow-green (48.08%)
+                Color(0xFFD2C11D), // Yellow (75%)
+                Color(0xFFF3A00C), // Orange (100%)
               ],
-              stops: [0.0, 0.25, 0.5192, 0.7788, 1.0],
+              stops: [0.0, 0.2212, 0.4808, 0.75, 1.0],
             ),
           ),
         ),
@@ -323,7 +346,18 @@ class _BMIResultScreenState extends State<BMIResultScreen> {
   Widget _buildAIAdvicesButton() {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to AI advices
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HealthAdviceScreen(
+              bmiValue: widget.bmiValue,
+              userName: widget.userName,
+              age: widget.age,
+              goal: widget.goal,
+              gender: widget.gender,
+            ),
+          ),
+        );
       },
       child: Container(
         width: 321,

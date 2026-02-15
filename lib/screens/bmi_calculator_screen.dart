@@ -70,6 +70,9 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
         builder: (context) => BMIResultScreen(
           bmiValue: bmi,
           userName: _nameController.text.isEmpty ? 'User' : _nameController.text,
+          age: int.tryParse(_ageController.text) ?? 25,
+          goal: _selectedGoal,
+          gender: _selectedGender,
         ),
       ),
     );
