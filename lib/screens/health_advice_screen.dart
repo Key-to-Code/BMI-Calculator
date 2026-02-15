@@ -38,19 +38,18 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
   Future<void> _loadAIContent() async {
     final category = _getBMICategory(widget.bmiValue);
     
-    final analysis = await GeminiService.getPersonalizedAnalysis(
-      bmi: widget.bmiValue,
-      category: category,
-      age: widget.age,
-      goal: widget.goal,
-      gender: widget.gender,
-    );
+    final analysis = 'Your BMI is ${widget.bmiValue.toStringAsFixed(1)}, '
+        'which falls in the $category category. '
+        'Based on your age (${widget.age}) and goal (${widget.goal}), '
+        'we recommend maintaining a balanced diet and regular exercise routine.';
     
-    final recommendations = await GeminiService.getRecommendedActions(
-      bmi: widget.bmiValue,
-      category: category,
-      goal: widget.goal,
-    );
+    final recommendations = <String>[
+      'Maintain a balanced diet with proper nutrition',
+      'Exercise regularly for at least 30 minutes a day',
+      'Stay hydrated and drink plenty of water',
+      'Get adequate sleep of 7-8 hours per night',
+      'Monitor your BMI regularly to track progress',
+    ];
 
     setState(() {
       _personalizedAnalysis = analysis;
