@@ -14,12 +14,6 @@ A Flutter application that calculates your Body Mass Index, visualizes your resu
 
 ---
 
-## Screenshots
-
-> Add your screenshots to `assets/images/` and reference them here.
-
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -108,7 +102,7 @@ lib/
 
 ## AI Integration
 
-The app calls the **Google Gemini 2.0 Flash** model (`gemini-2.0-flash`) via the `v1beta` REST API to generate two pieces of content in parallel:
+The app calls the **Google Gemini 2.0 Flash** model (`gemini-2.0-flash`) to generate two pieces of content in parallel:
 
 - A personalized health analysis paragraph (~150–200 words)
 - Two specific, actionable health recommendations
