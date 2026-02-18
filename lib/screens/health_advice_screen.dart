@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../services/gemini_service.dart';
 import 'bmi_calculator_screen.dart';
 
 class HealthAdviceScreen extends StatefulWidget {
@@ -24,7 +25,7 @@ class HealthAdviceScreen extends StatefulWidget {
 }
 
 class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
-  int _currentNavIndex = 1; // History tab is selected
+  int _currentNavIndex = 1; 
   String _personalizedAnalysis = '';
   List<String> _recommendations = [];
   bool _isLoading = true;
@@ -37,23 +38,29 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
 
   Future<void> _loadAIContent() async {
     final category = _getBMICategory(widget.bmiValue);
-    
-    final analysis = 'Your BMI is ${widget.bmiValue.toStringAsFixed(1)}, '
-        'which falls in the $category category. '
-        'Based on your age (${widget.age}) and goal (${widget.goal}), '
-        'we recommend maintaining a balanced diet and regular exercise routine.';
-    
-    final recommendations = <String>[
-      'Maintain a balanced diet with proper nutrition',
-      'Exercise regularly for at least 30 minutes a day',
-      'Stay hydrated and drink plenty of water',
-      'Get adequate sleep of 7-8 hours per night',
-      'Monitor your BMI regularly to track progress',
-    ];
+
+    final results = await Future.wait([
+      GeminiService.getPersonalizedAnalysis(
+        bmi: widget.bmiValue,
+        category: category,
+        age: widget.age,
+        goal: widget.goal,
+        gender: widget.gender,
+      ),
+      GeminiService.getRecommendedActions(
+        bmi: widget.bmiValue,
+        category: category,
+        goal: widget.goal,
+        age: widget.age,
+        gender: widget.gender,
+      ),
+    ]);
+
+    if (!mounted) return;
 
     setState(() {
-      _personalizedAnalysis = analysis;
-      _recommendations = recommendations;
+      _personalizedAnalysis = results[0] as String;
+      _recommendations = results[1] as List<String>;
       _isLoading = false;
     });
   }
@@ -74,6 +81,7 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -146,9 +154,7 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
             ],
           ),
           GestureDetector(
-            onTap: () {
-              // TODO: Implement download functionality
-            },
+            onTap: () {},
             child: Icon(
               Icons.download_outlined,
               size: 28,
@@ -160,13 +166,14 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
     );
   }
 
+
   Widget _buildResultsCard() {
     return Container(
       width: 390,
-      height: 210,
+      constraints: const BoxConstraints(minHeight: 210),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Column(
@@ -192,7 +199,7 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFFF3A00C),
+                        color: const Color(0xFFF3A00C),
                       ),
                     ),
                   ],
@@ -226,6 +233,7 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
             ],
           ),
           const SizedBox(height: 20),
+
           Row(
             children: [
               Expanded(
@@ -286,97 +294,115 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
   }
 
   Widget _buildPersonalizedAnalysis() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Personalized Analysis',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+    return SizedBox(
+      width: 390,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Personalized Analysis',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        _isLoading
-            ? Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
-            : Text(
-                _personalizedAnalysis,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                  height: 1.6,
+          const SizedBox(height: 18),
+          _isLoading
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF57D935),
+                    ),
+                  ),
+                )
+              : Text(
+                  _personalizedAnalysis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
+                    height: 1.6,
+                  ),
                 ),
-              ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildRecommendedActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recommended Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+    return SizedBox(
+      width: 390,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recommended Actions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        if (_isLoading)
-          Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
-        else
-          ...List.generate(_recommendations.length, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: CircularProgressIndicator(color: Color(0xFF57D935)),
+              ),
+            )
+          else
+            ...List.generate(_recommendations.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _recommendations[index],
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.5,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _recommendations[index],
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
-      ],
+              );
+            }),
+        ],
+      ),
     );
   }
 
@@ -387,7 +413,7 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Color(0xFFF3A00C), width: 1),
+        border: Border.all(color: const Color(0xFFF3A00C), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +428,11 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'This advice is intended for informational purposes only and should not replace professional medical advice or treatment. Always consult a healthcare provider before starting any new diet or exercise program.',
+            'This advice is intended for informational purposes '
+            'only and should not replace professional medical '
+            'advice or treatment. Always consult a healthcare '
+            'provider before starting any new diet or exercise '
+            'program.',
             style: TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
@@ -428,9 +458,9 @@ class _HealthAdviceScreenState extends State<HealthAdviceScreen> {
           width: 321,
           height: 57,
           decoration: BoxDecoration(
-            color: Color(0xFF57D935),
+            color: const Color(0xFF57D935),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Color(0xFF57D935), width: 3),
+            border: Border.all(color: const Color(0xFF57D935), width: 3),
           ),
           child: Center(
             child: Text(
